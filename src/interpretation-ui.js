@@ -1,14 +1,5 @@
-import { buildInterpretation } from './interpretation.js';
-
+import {buildInterpretation} from './interpretation.js';
 let renderedFor=null;
 function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
-function render(data){
- const result=document.getElementById('result');if(!result||!data||renderedFor===data)return;
- let host=document.getElementById('interpretationReport');
- if(!host){host=document.createElement('div');host.id='interpretationReport';host.className='interpretation-report';const note=result.querySelector('.accuracy-note');result.insertBefore(host,note||null)}
- const x=buildInterpretation(data);
- const planetRows=x.planets.map(p=>`<div class="interpretation-row"><div><b>${esc(p.name)}</b><span>${esc(p.signName)} · भाव ${p.house}</span></div><p>${esc(p.interpretation)}</p></div>`).join('');
- host.innerHTML=`<div class="panel"><div class="panel-title"><div><h3>ज्योतिष व्याख्या</h3><span>परम्परागत Vedic Jyotish interpretation</span></div><span>शैक्षिक रिपोर्ट</span></div><div class="interpretation-lead"><strong>${esc(x.overview)}</strong><p>${esc(x.rashi)} ${esc(x.nakshatra)}</p></div><div class="interpretation-grid"><div><small>राशि</small><b>${esc(x.rashi)}</b></div><div><small>नक्षत्र</small><b>${esc(x.nakshatra)}</b></div><div><small>दशा</small><b>${esc(x.dasha)}</b></div><div><small>मुख्य फोकस</small><b>${esc(x.focus)}</b></div></div><div class="planet-interpretations">${planetRows}</div><p class="accuracy-note">${esc(x.disclaimer)}</p></div>`;
- renderedFor=data;
-}
+function render(data){const result=document.getElementById('result');if(!result||!data||renderedFor===data)return;let host=document.getElementById('interpretationReport');if(!host){host=document.createElement('div');host.id='interpretationReport';host.className='interpretation-report';const note=result.querySelector('.accuracy-note');result.insertBefore(host,note||null)}const x=buildInterpretation(data);const planetRows=x.planets.map(p=>`<div class="interpretation-row"><div><b>${esc(p.name)}</b><span>${esc(p.signName)} · भाव ${p.house}</span></div><p>${esc(p.interpretation)}</p></div>`).join('');const yogaRows=x.yogas.map(y=>`<div class="interpretation-row"><div><b>${esc(y.name)}</b><span>${esc(y.type)}</span></div><p>${esc(y.text)}</p></div>`).join('');host.innerHTML=`<div class="panel"><div class="panel-title"><div><h3>ज्योतिष व्याख्या</h3><span>परम्परागत Vedic Jyotish interpretation</span></div><span>शैक्षिक रिपोर्ट</span></div><div class="interpretation-lead"><strong>${esc(x.overview)}</strong><p>${esc(x.rashi)} ${esc(x.nakshatra)}</p></div><div class="interpretation-grid"><div><small>राशि</small><b>${esc(x.rashi)}</b></div><div><small>नक्षत्र</small><b>${esc(x.nakshatra)}</b></div><div><small>दशा</small><b>${esc(x.dasha)}</b></div><div><small>मुख्य फोकस</small><b>${esc(x.focus)}</b></div></div><h4>योगहरू</h4><div class="planet-interpretations">${yogaRows}</div><h4>ग्रह व्याख्या</h4><div class="planet-interpretations">${planetRows}</div><p class="accuracy-note">${esc(x.disclaimer)}</p></div>`;renderedFor=data}
 export function initInterpretation(){setInterval(()=>render(window.__kundali),500)}
