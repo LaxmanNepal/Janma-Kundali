@@ -1,48 +1,19 @@
 <!doctype html>
 <html lang="ne">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#7c3aed" />
-  <meta name="description" content="Janma Kundali — नेपाली जन्म कुण्डली, राशि, नक्षत्र, लग्न, ग्रह स्थिति, दशा र नवांश।" />
-  <meta name="robots" content="index,follow" />
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#7c3aed" /><meta name="description" content="Janma Kundali — नेपाली जन्म कुण्डली, राशि, नक्षत्र, लग्न, ग्रह स्थिति, दशा र नवांश।" /><meta name="robots" content="index,follow" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <title>Janma Kundali — जन्म कुण्डली</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="#home"><span class="brand-mark">ॐ</span><span>Janma <b>Kundali</b></span></a>
-  <nav><a href="#home">होम</a><a href="#kundali">कुण्डली</a><a href="#features">सेवाहरू</a><a href="#about">बारेमा</a></nav>
-  <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☾</button>
-</header>
+<header class="topbar"><a class="brand" href="#home"><span class="brand-mark">ॐ</span><span>Janma <b>Kundali</b></span></a><nav><a href="#home">होम</a><a href="#kundali">कुण्डली</a><a href="#features">सेवाहरू</a><a href="#about">बारेमा</a></nav><button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☾</button></header>
 <main>
-<section id="home" class="hero">
-  <div class="hero-copy"><span class="eyebrow">✦ नेपाली ज्योतिष अनुभव</span><h1>तपाईंको जन्म कुण्डली,<br><em>सरल र सुन्दर</em> तरिकाले।</h1><p>जन्म मिति, समय र स्थानबाट Lahiri sidereal गणना, राशि, नक्षत्र, लग्न, ग्रह स्थिति, दशा र नवांश हेर्नुहोस्।</p><a class="primary-btn" href="#kundali">कुण्डली बनाउनुहोस् <span>→</span></a></div>
-  <div class="hero-art" aria-hidden="true"><div class="mandala">☼</div><div class="orbit o1"></div><div class="orbit o2"></div><div class="planet p1">☽</div><div class="planet p2">☿</div><div class="planet p3">♃</div></div>
-</section>
-<section id="kundali" class="section calculator">
-  <div class="section-head"><span class="eyebrow">01 · जन्म विवरण</span><h2>आफ्नो जन्म विवरण भर्नुहोस्</h2><p>सही जन्म समय र स्थान प्रयोग गर्नुहोस्। हालका built-in locations नेपालका प्रमुख शहरहरू हुन्।</p></div>
-  <form id="kundaliForm" class="form-card">
-    <div class="field"><label for="name">नाम</label><input id="name" name="name" placeholder="तपाईंको नाम" autocomplete="name" /></div>
-    <div class="field"><label>जन्म मिति (AD)</label><div class="date-row"><select id="year" aria-label="Birth year"></select><select id="month" aria-label="Birth month"></select><select id="day" aria-label="Birth day"></select></div></div>
-    <div class="field"><label for="time">जन्म समय (स्थानीय)</label><input id="time" type="time" value="12:00" /></div>
-    <div class="field"><label for="place">जन्म स्थान</label><input id="place" list="places" placeholder="जस्तै: Hetauda, Nepal" autocomplete="address-level2" /><datalist id="places"><option value="Kathmandu, Nepal"><option value="Hetauda, Nepal"><option value="Pokhara, Nepal"><option value="Bharatpur, Nepal"><option value="Biratnagar, Nepal"><option value="Dharan, Nepal"><option value="Butwal, Nepal"><option value="Nepalgunj, Nepal"></datalist></div>
-    <div class="form-actions"><button class="primary-btn" type="submit">कुण्डली निकाल्नुहोस् <span>✦</span></button><button class="secondary-btn" type="button" id="demoBtn">डेमो विवरण</button></div>
-  </form>
-</section>
-<section id="result" class="section result-section hidden">
-  <div class="section-head"><span class="eyebrow">02 · तपाईंको रिपोर्ट</span><h2 id="resultTitle">जन्म कुण्डली</h2><p id="resultMeta"></p></div>
-  <div class="summary-grid"><article class="summary-card"><span>चन्द्र राशि</span><strong id="rashi">—</strong><small id="rashiEn">—</small></article><article class="summary-card"><span>नक्षत्र</span><strong id="nakshatra">—</strong><small id="nakshatraPada">—</small></article><article class="summary-card"><span>लग्न</span><strong id="lagna">—</strong><small>Ascendant</small></article><article class="summary-card"><span>तत्व</span><strong id="element">—</strong><small id="quality">—</small></article></div>
-  <div class="report-grid"><article class="panel chart-panel"><div class="panel-title"><h3>राशी कुण्डली · D1</h3><button id="printBtn" class="icon-btn">⤓ PDF / Print</button></div><div id="chart" class="chart" aria-label="Kundali chart"></div></article><article class="panel"><div class="panel-title"><h3>ग्रह स्थिति</h3><span>Sidereal · Lahiri</span></div><div id="planetTable" class="planet-list"></div></article></div>
-  <div id="extendedReport" class="extended-grid"></div>
-  <p class="accuracy-note">गणना Swiss Ephemeris WASM र Lahiri sidereal mode प्रयोग गरेर browser मै हुन्छ। स्थान सूचीबाहिरको शहर हाल नजिकको Kathmandu coordinate मा approximate हुन्छ; production release अघि worldwide geocoding र exact timezone database जोडिनेछ।</p>
-</section>
+<section id="home" class="hero"><div class="hero-copy"><span class="eyebrow">✦ नेपाली ज्योतिष अनुभव</span><h1>तपाईंको जन्म कुण्डली,<br><em>सरल र सुन्दर</em> तरिकाले।</h1><p>जन्म मिति, समय र स्थानबाट Lahiri sidereal गणना, राशि, नक्षत्र, लग्न, ग्रह स्थिति, दशा र नवांश हेर्नुहोस्।</p><a class="primary-btn" href="#kundali">कुण्डली बनाउनुहोस् <span>→</span></a></div><div class="hero-art" aria-hidden="true"><div class="mandala">☼</div><div class="orbit o1"></div><div class="orbit o2"></div><div class="planet p1">☽</div><div class="planet p2">☿</div><div class="planet p3">♃</div></div></section>
+<section id="kundali" class="section calculator"><div class="section-head"><span class="eyebrow">01 · जन्म विवरण</span><h2>आफ्नो जन्म विवरण भर्नुहोस्</h2><p>सही जन्म समय र स्थान प्रयोग गर्नुहोस्। हालका built-in locations नेपालका प्रमुख शहरहरू हुन्।</p></div><form id="kundaliForm" class="form-card"><div class="field"><label for="name">नाम</label><input id="name" name="name" placeholder="तपाईंको नाम" autocomplete="name" /></div><div class="field"><label>जन्म मिति (AD)</label><div class="date-row"><select id="year" aria-label="Birth year"></select><select id="month" aria-label="Birth month"></select><select id="day" aria-label="Birth day"></select></div></div><div class="field"><label for="time">जन्म समय (स्थानीय)</label><input id="time" type="time" value="12:00" /></div><div class="field"><label for="place">जन्म स्थान</label><input id="place" list="places" placeholder="जस्तै: Hetauda, Nepal" autocomplete="address-level2" /><datalist id="places"><option value="Kathmandu, Nepal"><option value="Hetauda, Nepal"><option value="Pokhara, Nepal"><option value="Bharatpur, Nepal"><option value="Biratnagar, Nepal"><option value="Dharan, Nepal"><option value="Butwal, Nepal"><option value="Nepalgunj, Nepal"></datalist></div><div class="form-actions"><button class="primary-btn" type="submit">कुण्डली निकाल्नुहोस् <span>✦</span></button><button class="secondary-btn" type="button" id="demoBtn">डेमो विवरण</button></div></form></section>
+<section id="result" class="section result-section hidden"><div class="section-head"><span class="eyebrow">02 · तपाईंको रिपोर्ट</span><h2 id="resultTitle">जन्म कुण्डली</h2><p id="resultMeta"></p></div><div class="summary-grid"><article class="summary-card"><span>चन्द्र राशि</span><strong id="rashi">—</strong><small id="rashiEn">—</small></article><article class="summary-card"><span>नक्षत्र</span><strong id="nakshatra">—</strong><small id="nakshatraPada">—</small></article><article class="summary-card"><span>लग्न</span><strong id="lagna">—</strong><small>Ascendant</small></article><article class="summary-card"><span>तत्व</span><strong id="element">—</strong><small id="quality">—</small></article></div><div class="report-grid"><article class="panel chart-panel"><div class="panel-title"><h3>राशी कुण्डली · D1</h3><button id="printBtn" class="icon-btn">⤓ PDF / Print</button></div><div id="chart" class="chart" aria-label="Kundali chart"></div></article><article class="panel"><div class="panel-title"><h3>ग्रह स्थिति</h3><span>Sidereal · Lahiri</span></div><div id="planetTable" class="planet-list"></div></article></div><div id="extendedReport" class="extended-grid"></div><p class="accuracy-note">गणना Swiss Ephemeris WASM र Lahiri sidereal mode प्रयोग गरेर browser मै हुन्छ। स्थान सूचीबाहिरको शहर हाल नजिकको Kathmandu coordinate मा approximate हुन्छ; production release अघि worldwide geocoding र exact timezone database जोडिनेछ।</p></section>
 <section id="features" class="section features"><div class="section-head"><span class="eyebrow">03 · सेवाहरू</span><h2>अबको पूर्ण platform architecture</h2></div><div class="feature-grid"><article><span>♈</span><h3>राशि · नक्षत्र · लग्न</h3><p>Sidereal zodiac, Moon sign, Nakshatra/Pada र Ascendant।</p></article><article><span>◈</span><h3>ग्रह स्थिति</h3><p>सूर्यदेखि शनि तथा राहु–केतुको longitude, sign र retrograde state।</p></article><article><span>♡</span><h3>कुण्डली मिलान</h3><p>अर्को data layer मा अष्टकूट/Guna Milan जोड्न मिल्ने modular structure।</p></article><article><span>☀</span><h3>दशा · नवांश · गोचर</h3><p>Vimshottari Dasha र D9 अहिलेको engine मा; transit layer पछि थप्न सकिने।</p></article></div></section>
 <section id="about" class="section about"><div><span class="eyebrow">04 · Janma Kundali</span><h2>नेपाली प्रयोगकर्ताका लागि बनाइएको।</h2><p>यो project अब placeholder seed बाट real astronomical calculation engine मा सारिएको छ। Frontend static hosting मै चल्ने गरी WASM engine प्रयोग गरिएको छ।</p></div><div class="roadmap"><span>✓ Responsive UI</span><span>✓ Real ephemeris engine</span><span>✓ Lahiri sidereal</span><span>✓ Whole-sign houses</span><span>✓ Vimshottari Dasha</span><span>✓ D9 Navamsa</span><span>→ BS conversion</span><span>→ Worldwide geocoding</span><span>→ Matching</span><span>→ PDF reports</span><span>→ Accounts/API</span></div></section>
-</main>
-<footer><div class="brand"><span class="brand-mark">ॐ</span><span>Janma <b>Kundali</b></span></div><p>© <span id="yearNow"></span> Laxman Nepal · Built for Nepali users</p></footer>
-<script type="module" src="assets/js/app.js"></script>
+</main><footer><div class="brand"><span class="brand-mark">ॐ</span><span>Janma <b>Kundali</b></span></div><p>© <span id="yearNow"></span> Laxman Nepal · Built for Nepali users</p></footer><script type="module" src="assets/js/app.js"></script>
 </body></html>
