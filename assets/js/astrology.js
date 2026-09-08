@@ -1,0 +1,128 @@
+import { SwissEphemeris, Planet, HouseSystem, SiderealMode } from '@swisseph/browser';
+
+const RASHIS = [
+  ['मेष','Aries','अग्नि','चर'],['वृष','Taurus','पृथ्वी','स्थिर'],['मिथुन','Gemini','वायु','द्विस्वभाव'],
+  ['कर्कट','Cancer','जल','चर'],['सिंह','Leo','अग्नि','स्थिर'],['कन्या','Virgo','पृथ्वी','द्विस्वभाव'],
+  ['तुला','Libra','वायु','चर'],['वृश्चिक','Scorpio','जल','स्थिर'],['धनु','Sagittarius','अग्नि','द्विस्वभाव'],
+  ['मकर','Capricorn','पृथ्वी','चर'],['कुम्भ','Aquarius','वायु','स्थिर'],['मीन','Pisces','जल','द्विस्वभाव']
+];
+const NAKSHATRAS = ['अश्विनी','भरणी','कृत्तिका','रोहिणी','मृगशिरा','आर्द्रा','पुनर्वसु','पुष्य','आश्लेषा','मघा','पूर्वाफाल्गुनी','उत्तराफाल्गुनी','हस्त','चित्रा','स्वाती','विशाखा','अनुराधा','ज्येष्ठा','मूल','पूर्वाषाढा','उत्तराषाढा','श्रवण','धनिष्ठा','शतभिषा','पूर्वाभाद्रपदा','उत्तराभाद्रपदा','रेवती'];
+const PLANETS = [
+  [Planet.Sun,'सूर्य'],[Planet.Moon,'चन्द्र'],[Planet.Mars,'मंगल'],[Planet.Mercury,'बुध'],
+  [Planet.Jupiter,'गुरु'],[Planet.Venus,'शुक्र'],[Planet.Saturn,'शनि']
+];
+const NAK_LORDS = ['केतु','शुक्र','सूर्य','चन्द्र','मंगल','राहु','गुरु','शनि','बुध'];
+const DASHA_YEARS = {केतु:7, शुक्र:20, सूर्य:6, चन्द्र:10, मंगल:7, राहु:18, गुरु:16, शनि:19, बुध:17};
+const LOCATION = {
+  'Kathmandu, Nepal': {lat:27.7172, lon:85.3240, tz:5.75},
+  'Hetauda, Nepal': {lat:27.4284, lon:85.0322, tz:5.75},
+  'Pokhara, Nepal': {lat:28.2096, lon:83.9856, tz:5.75},
+  'Bharatpur, Nepal': {lat:27.6833, lon:84.4333, tz:5.75},
+  'Biratnagar, Nepal': {lat:26.4525, lon:87.2718, tz:5.75},
+  'Dharan, Nepal': {lat:26.8120, lon:87.2830, tz:5.75},
+  'Butwal, Nepal': {lat:27.7000, lon:83.4500, tz:5.75},
+  'Nepalgunj, Nepal': {lat:28.0500, lon:81.6167, tz:5.75}
+};
+
+const norm = n => ((n % 360) + 360) % 360;
+const signAt = lon => Math.floor(norm(lon) / 30);
+const nakAt = lon => {
+  const x = norm(lon);
+  const index = Math.floor(x / (360 / 27));
+  const pada = Math.floor((x % (360 / 27)) / (360 / 108)) + 1;
+  return { index, pada, name: NAKSHATRAS[index], lord: NAK_LORDS[index % 9] };
+};
+const degText = x => `${Math.floor(x)}° ${Math.floor((x - Math.floor(x)) * 60)}′`;
+
+function localToUtc(date, time, tzHours) {
+  const [y,m,d] = date.split('-').map(Number);
+  const [hh,mm] = time.split(':').map(Number);
+  return new Date(Date.UTC(y, m - 1, d, hh - tzHours, mm));
+}
+
+function parseLocation(place) {
+  const exact = LOCATION[place];
+  if (exact) return exact;
+  const key = Object.keys(LOCATION).find(k => place.toLowerCase().includes(k.split(',')[0].toLowerCase()));
+  if (key) return LOCATION[key];
+  return {lat:27.7172, lon:85.3240, tz:5.75, approximate:true};
+}
+
+export async function calculateKundali({date, time, place}) {
+  const loc = parseLocation(place);
+  const utc = localToUtc(date, time, loc.tz);
+  const swe = new SwissEphemeris();
+  await swe.init();
+  swe.setSiderealMode(SiderealMode.Lahiri);
+  const jd = swe.dateToJulianDay(utc);
+
+  const planets = PLANETS.map(([id,name]) => {
+    const p = swe.calculatePosition(jd, id);
+    const longitude = norm(p.longitude);
+    const s = signAt(longitude);
+    const nak = nakAt(longitude);
+    return {id,name,longitude,sign:s,signName:RASHIS[s][0],degree:longitude % 30,nakshatra:nak.name,pada:nak.pada,lord:nak.lord,retrograde:!!p.retrograde,latitude:p.latitude};
+  });
+
+  const houses = swe.calculateHouses(jd, loc.lat, loc.lon, HouseSystem.WholeSign);
+  const asc = norm(houses.ascendant);
+  const ascSign = signAt(asc);
+  const moon = planets.find(p => p.id === Planet.Moon);
+  const moonNak = nakAt(moon.longitude);
+
+  const nodes = getNodes(swe, jd);
+  planets.push(nodes.rahu, nodes.ketu);
+
+  return {
+    engine:'Swiss Ephemeris WASM', sidereal:'Lahiri', houseSystem:'Whole Sign',
+    input:{date,time,place,utc:utc.toISOString(),...loc},
+    ascendant:{longitude:asc,sign:ascSign,signName:RASHIS[ascSign][0],degree:asc%30},
+    rashi:{sign:moon.sign,signName:RASHIS[moon.sign][0],english:RASHIS[moon.sign][1]},
+    moonNakshatra:moonNak,
+    planets,
+    houses:houses.cusps || [],
+    dasha:buildVimshottari(moon.longitude, utc),
+    navamsa:planets.map(p => ({name:p.name, sign:navamsaSign(p.longitude), longitude:p.longitude})),
+    meta:{locationApproximate:!!loc.approximate}
+  };
+}
+
+function getNodes(swe,jd){
+  const trueNode = swe.calculatePosition(jd, Planet.TrueNode || Planet.MeanNode);
+  const rahuLon = norm(trueNode.longitude);
+  const ketuLon = norm(rahuLon + 180);
+  const make = (name,longitude) => { const s=signAt(longitude); const n=nakAt(longitude); return {id:name==='राहु'?'rahu':'ketu',name,longitude,sign:s,signName:RASHIS[s][0],degree:longitude%30,nakshatra:n.name,pada:n.pada,lord:n.lord,retrograde:true,latitude:0}; };
+  return {rahu:make('राहु',rahuLon),ketu:make('केतु',ketuLon)};
+}
+
+function navamsaSign(longitude){
+  const s=signAt(longitude);
+  const part=Math.floor((longitude%30)/3.3333333333333335);
+  const movable=[0,3,6,9].includes(s), fixed=[1,4,7,10].includes(s);
+  const start=movable?s:fixed?(s+8)%12:(s+4)%12;
+  return RASHIS[(start+part)%12][0];
+}
+
+function buildVimshottari(moonLongitude, birthDate){
+  const nak = nakAt(moonLongitude);
+  const lord = nak.lord;
+  const span = 360/27;
+  const elapsed = (moonLongitude % span) / span;
+  const remaining = DASHA_YEARS[lord] * (1-elapsed);
+  const order=['केतु','शुक्र','सूर्य','चन्द्र','मंगल','राहु','गुरु','शनि','बुध'];
+  const startIndex=order.indexOf(lord);
+  let cursor=new Date(birthDate);
+  const list=[];
+  for(let i=0;i<9;i++){
+    const dLord=order[(startIndex+i)%9];
+    const years=i===0?remaining:DASHA_YEARS[dLord];
+    const end=new Date(cursor);
+    end.setUTCFullYear(end.getUTCFullYear()+Math.floor(years));
+    end.setUTCMonth(end.getUTCMonth()+Math.round((years%1)*12));
+    list.push({lord:dLord,start:cursor.toISOString().slice(0,10),end:end.toISOString().slice(0,10),years:Number(years.toFixed(2))});
+    cursor=end;
+  }
+  return {birthLord:lord,balanceYears:Number(remaining.toFixed(2)),periods:list};
+}
+
+export { RASHIS, NAKSHATRAS, PLANETS, LOCATION, degText, signAt, nakAt };
