@@ -1,11 +1,12 @@
 {
-  "name": "Janma Kundali — जन्म कुण्डली",
-  "short_name": "Janma Kundali",
-  "lang": "ne",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#f7f5fb",
-  "theme_color": "#7c3aed",
-  "description": "Nepali-first Vedic birth chart calculator.",
-  "icons": []
+  "name":"Janma Kundali — जन्म कुण्डली",
+  "short_name":"Janma Kundali",
+  "description":"नेपाली जन्म कुण्डली र वैदिक ज्योतिष वेब एप",
+  "lang":"ne",
+  "dir":"ltr",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f7f5fb",
+  "theme_color":"#7c3aed",
+  "icons":[]
 }
