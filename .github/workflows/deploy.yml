@@ -31,9 +31,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run regression tests
         run: npm test
@@ -43,14 +44,19 @@ jobs:
 
       - name: Prepare static runtime files
         run: |
+          mkdir -p dist/data
           cp manifest.webmanifest dist/manifest.webmanifest
           cp sw.js dist/sw.js
+          cp -r data/. dist/data/
 
       - name: Verify build output
         run: |
           test -f dist/index.html
           test -f dist/manifest.webmanifest
           test -f dist/sw.js
+          test -f dist/data/locations.json
+          test -f dist/data/nakshatra.json
+          test -f dist/data/panchanga.json
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
