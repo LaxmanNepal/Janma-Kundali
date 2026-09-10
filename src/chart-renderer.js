@@ -1,0 +1,10 @@
+const RASHIS=['मेष','वृष','मिथुन','कर्कट','सिंह','कन्या','तुला','वृश्चिक','धनु','मकर','कुम्भ','मीन'];
+const SHORT={सूर्य:'सू',चन्द्र:'चं',मंगल:'मं',बुध:'बु',गुरु:'गु',शुक्र:'शु',शनि:'श',राहु:'रा',केतु:'के'};
+const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\\':'&#39;'}[m]));
+const byHouse=(data)=>{const houses=Array.from({length:12},()=>[]);const asc=data?.ascendant?.sign??0;(data?.planets||[]).forEach(p=>{const house=((p.sign-asc+12)%12);houses[house].push(p)});return houses};
+const planetText=p=>`${SHORT[p.name]||p.name.slice(0,2)}${p.retrograde?'℞':''}`;
+function cell(house,items){const sign=RASHIS[house%12];return `<div class="kundali-house"><span class="house-no">${house+1}</span><span class="house-sign">${esc(sign)}</span><div class="house-planets">${items.map(p=>`<span title="${esc(p.name)} · ${esc(p.signName)} · ${Number(p.degree).toFixed(1)}°">${esc(planetText(p))}</span>`).join('')}</div></div>`}
+export function renderNorthIndianChart(host,data){if(!host)return;const houses=byHouse(data);host.innerHTML=`<div class="kundali-chart north-chart" role="img" aria-label="North Indian D1 Kundali chart">${houses.map((items,i)=>cell(i,items)).join('')}<div class="chart-watermark">D1 · राशि</div></div>`}
+export function renderSouthIndianChart(host,data){if(!host)return;const asc=data?.ascendant?.sign??0;const houses=Array.from({length:12},()=>[]);(data?.planets||[]).forEach(p=>houses[p.sign].push(p));host.innerHTML=`<div class="kundali-chart south-chart" role="img" aria-label="South Indian D1 Kundali chart">${Array.from({length:16},(_,i)=>{if(i===5)return `<div class="south-center">लग्न<br><b>${esc(RASHIS[asc])}</b><small>D1 · राशि</small></div>`;if([0,1,2,3,4,6,7,8,9,10,11,12].includes(i)){const map=[0,1,2,3,4,5,6,7,8,9,10,11];const s=map[i===6?5:i<5?i:i-1];return cell(s,houses[s])}return '<div class="south-empty"></div>'}).join('')}</div>`}
+export function renderKundaliChart(host,data,mode='north'){if(mode==='south')renderSouthIndianChart(host,data);else renderNorthIndianChart(host,data)}
+export {RASHIS};
