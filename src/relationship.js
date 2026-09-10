@@ -1,10 +1,8 @@
-const HOUSE_LABELS={5:'प्रेम/सन्तान',7:'विवाह/साझेदारी'};
 const SIGN_LORDS=['मंगल','शुक्र','बुध','चन्द्र','सूर्य','बुध','शुक्र','मंगल','गुरु','शनि','शनि','गुरु'];
-const THEMES={शुक्र:'सम्बन्ध, स्नेह, आकर्षण र सामञ्जस्य',चन्द्र:'भावनात्मक सुरक्षा, परिवार र संवेदनशीलता',मंगल:'ऊर्जा, पहल र मतभेद व्यवस्थापन',गुरु:'विश्वास, मार्गदर्शन र मूल्य',शनि:'प्रतिबद्धता, धैर्य र दीर्घकालीन जिम्मेवारी',बुध:'संवाद, समझदारी र व्यवहारिक सोच',सूर्य:'आत्मसम्मान, स्पष्टता र व्यक्तिगत पहिचान'};
 function houseFromLagna(p,data){return ((p.sign-data.ascendant.sign+12)%12)+1}
 function planet(data,name){return data.planets?.find(p=>p.name===name)}
-function lordInHouse(data,house){const sign=(data.ascendant.sign+house-1)%12;const lord=SIGN_LORDS[sign];const p=planet(data,lord);return {sign,lord,house:p?houseFromLagna(p,data):null,planet:p}}
-function manglik(data){const mars=planet(data,'मंगल');if(!mars)return {present:false,houses:[]};const refs=[data.ascendant?.sign,data.rashi?.sign,data.venus?.sign];const houses=refs.filter(Number.isInteger).map(sign=>((mars.sign-sign+12)%12)+1).filter(h=>[1,4,7,8,12].includes(h));return {present:houses.length>0,houses:[...new Set(houses)]}}
+function lordInHouse(data,house){const sign=(data.ascendant.sign+house-1)%12;const lord=SIGN_LORDS[sign];const p=planet(data,lord);return {name:lord,lord,sign,house:p?houseFromLagna(p,data):null,planet:p}}
+function manglik(data){const mars=planet(data,'मंगल'),venus=planet(data,'शुक्र');if(!mars)return {present:false,houses:[]};const refs=[data.ascendant?.sign,data.rashi?.sign,venus?.sign];const houses=refs.filter(Number.isInteger).map(sign=>((mars.sign-sign+12)%12)+1).filter(h=>[1,4,7,8,12].includes(h));return {present:houses.length>0,houses:[...new Set(houses)]}}
 export function analyzeRelationship(data){
  if(!data?.ascendant||!data?.rashi)return {fifth:null,seventh:null,venus:null,mars:null,manglik:{present:false,houses:[]},strengths:[],cautions:[],note:'सम्बन्ध विश्लेषणका लागि जन्मकुण्डली data आवश्यक छ।'};
  const fifth=lordInHouse(data,5),seventh=lordInHouse(data,7),venus=planet(data,'शुक्र'),mars=planet(data,'मंगल');
