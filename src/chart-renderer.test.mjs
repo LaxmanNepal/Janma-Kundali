@@ -1,12 +1,16 @@
 import { renderKundaliChart, renderNorthIndianVargaChart } from './chart-renderer.js';
 import assert from 'node:assert/strict';
-const data={ascendant:{sign:3},planets:[{name:'सूर्य',sign:3,signName:'कर्कट',degree:10,retrograde:false},{name:'चन्द्र',sign:7,signName:'वृश्चिक',degree:12,retrograde:false},{name:'राहु',sign:10,signName:'कुम्भ',degree:2,retrograde:true},{name:'केतु',sign:4,signName:'सिंह',degree:2,retrograde:true}]};
+const data={ascendant:{sign:3},planets:[{name:'सूर्य',sign:3,signName:'कर्कट',degree:10,longitude:100,retrograde:false},{name:'चन्द्र',sign:7,signName:'वृश्चिक',degree:12,longitude:222,retrograde:false},{name:'राहु',sign:10,signName:'कुम्भ',degree:2,longitude:302,retrograde:true},{name:'केतु',sign:4,signName:'सिंह',degree:2,longitude:122,retrograde:true}]};
 const host={innerHTML:''};
 renderKundaliChart(host,data,'north');
 assert.match(host.innerHTML,/North Indian/);
 assert.match(host.innerHTML,/सू/);
 assert.match(host.innerHTML,/रा℞/);
 assert.match(host.innerHTML,/मेष/);
+assert.match(host.innerHTML,/ल/);
+const exalted={ascendant:{sign:0},planets:[{name:'सूर्य',sign:0,signName:'मेष',degree:10,longitude:10,retrograde:false}]};
+renderKundaliChart(host,exalted,'north');
+assert.match(host.innerHTML,/सूउ/);
 renderNorthIndianVargaChart(host,[{name:'सूर्य',sign:5},{name:'चन्द्र',sign:8}],5,{title:'नवांश · D9'});
 assert.match(host.innerHTML,/नवांश/);
 assert.match(host.innerHTML,/सूर्य/);
