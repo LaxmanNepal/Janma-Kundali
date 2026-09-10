@@ -35,6 +35,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Prepare static runtime files
+        run: |
+          cp manifest.webmanifest dist/manifest.webmanifest
+          cp sw.js dist/sw.js
+
       - name: Verify build output
         run: |
           test -f dist/index.html
