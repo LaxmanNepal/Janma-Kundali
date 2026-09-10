@@ -7,7 +7,7 @@ const KARANA=['बव','बालव','कौलव','तैतिल','गर',
 const NAKSHATRAS=['अश्विनी','भरणी','कृत्तिका','रोहिणी','मृगशिरा','आर्द्रा','पुनर्वसु','पुष्य','आश्लेषा','मघा','पूर्वाफाल्गुनी','उत्तराफाल्गुनी','हस्त','चित्रा','स्वाती','विशाखा','अनुराधा','ज्येष्ठा','मूल','पूर्वाषाढा','उत्तराषाढा','श्रवण','धनिष्ठा','शतभिषा','पूर्वाभाद्रपदा','उत्तराभाद्रपदा','रेवती'];
 const WEEK=['आइतबार','सोमबार','मंगलबार','बुधबार','बिहीबार','शुक्रबार','शनिबार'];
 const zoneOffset=(date,tz)=>{const parts=new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'longOffset',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date),z=parts.find(p=>p.type==='timeZoneName')?.value||'GMT+00:00',m=z.match(/GMT([+-])(\d{2})(?::?(\d{2}))?/);return m?(m[1]==='-'?-1:1)*(Number(m[2])+Number(m[3]||0)/60):0};
-const localToUtc=(date,time,tz)=>{const[y,m,d]=date.split('-').map(Number),[hh,mm]=time.split(':').map(Number),naive=new Date(Date.UTC(y,m-1,d,hh,mm)),offset=zoneOffset(naive,tz);let utc=new Date(naive.getTime()-offset*3600000);for(let i=0;i<2;i++){const corrected=zoneOffset(utc,tz);if(corrected===offset)break;utc=new Date(naive.getTime()-corrected*3600000)}return utc};
+const localToUtc=(date,time,tz)=>{const[y,m,d]=date.split('-').map(Number),[hh,mm]=time.split(':').map(Number),naive=new Date(Date.UTC(y,m-1,d,hh,mm));let offset=zoneOffset(naive,tz),utc=new Date(naive.getTime()-offset*3600000);for(let i=0;i<3;i++){const corrected=zoneOffset(utc,tz);if(corrected===offset)break;offset=corrected;utc=new Date(naive.getTime()-offset*3600000)}return utc};
 const karanaAt=i=>i===0?'किंस्तुघ्न':i>=57?KARANA[7+(i-57)]:KARANA[(i-1)%7];
 const nakshatraAt=lon=>{const i=Math.min(26,Math.floor(norm(lon)/(360/27)));return{name:NAKSHATRAS[i],pada:Math.floor((norm(lon)%(360/27))/((360/27)/4))+1}};
 export async function calculatePanchanga(date,time,lat,lon,tz='Asia/Kathmandu'){
@@ -16,4 +16,4 @@ export async function calculatePanchanga(date,time,lat,lon,tz='Asia/Kathmandu'){
  const localWeekday=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short'}).format(utc),weekdayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
  return{vara:WEEK[weekdayMap[localWeekday]??0],tithi:tithiNumber===15?'पूर्णिमा':tithiNumber===30?'अमावस्या':TITHI[(tithiNumber-1)%15],tithiNumber,paksha:tithiNumber<=15?'शुक्ल पक्ष':'कृष्ण पक्ष',yoga:YOGA[yogaIndex],karana:karanaAt(half),nakshatra:nk.name,nakshatraPada:nk.pada,sunLongitude,moonLongitude,julianDay:jd,latitude:lat,longitude:lon,timezone:tz,utc:utc.toISOString(),timings,note:'तिथि, योग, करण र नक्षत्र Lahiri sidereal Sun/Moon positionsबाट गणना गरिन्छ। सूर्योदय, सूर्यास्त, राहु काल, यमगण्ड, गुलिक र चोघडिया स्थान/मिति/timezone अनुसार solar geometry बाट अनुमानित हुन्छन्।'};
 }
-export {TITHI,YOGA,KARANA,WEEK,NAKSHATRAS};
+export {TITHI,YOGA,KARANA,WEEK,NAKSHATRAS,zoneOffset,localToUtc};
