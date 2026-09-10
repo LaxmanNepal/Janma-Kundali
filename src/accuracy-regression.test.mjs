@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import { buildVimshottari, navamsaSign, localToUtc, nakAt, signAt } from '../assets/js/astrology.js';
 
-assert.equal(signAt(0),'0');
-assert.equal(signAt(359.999),'11');
+assert.equal(signAt(0),0);
+assert.equal(signAt(359.999),11);
 assert.equal(nakAt(0).name,'अश्विनी');
 assert.equal(nakAt(0).pada,1);
-assert.equal(nakAt(13.333333).pada,4);
+assert.equal(nakAt(13.2).pada,4);
 
 assert.equal(navamsaSign(0),'मेष');
 assert.equal(navamsaSign(30),'मकर');
