@@ -3,16 +3,16 @@ const SHORT={सूर्य:'सू',चन्द्र:'चं',मंगल:'
 const EXALT={सूर्य:0,चन्द्र:1,मंगल:9,बुध:5,गुरु:3,शुक्र:11,शनि:6};
 const OWN={सूर्य:[4],चन्द्र:[3],मंगल:[0,7],बुध:[2,5],गुरु:[8,11],शुक्र:[1,6],शनि:[9,10]};
 const COMBUST={चन्द्र:12,मंगल:17,बुध:14,गुरु:11,शुक्र:10,शनि:15};
-const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const esc=v=>String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
 const norm=n=>((Number(n)%360)+360)%360;
 const distance=(a,b)=>{const d=Math.abs(norm(a)-norm(b));return Math.min(d,360-d)};
-const dignity=(p)=>{if(p.name==='राहु'||p.name==='केतु')return 'छाया ग्रह';if(EXALT[p.name]===Number(p.sign))return 'उच्च';if((EXALT[p.name]+6)%12===Number(p.sign))return 'नीच';if((OWN[p.name]||[]).includes(Number(p.sign)))return 'स्वगृही';return 'सामान्य'};
+const dignity=p=>{if(p.name==='राहु'||p.name==='केतु')return 'छाया ग्रह';if(EXALT[p.name]===Number(p.sign))return 'उच्च';if((EXALT[p.name]+6)%12===Number(p.sign))return 'नीच';if((OWN[p.name]||[]).includes(Number(p.sign)))return 'स्वगृही';return 'सामान्य'};
 const combust=(p,sun)=>{const limit=COMBUST[p.name];return !!limit&&sun&&distance(p.longitude,sun.longitude)<=limit};
-const planetText=(p,sun)=>{const marks=[];if(p.retrograde)marks.push('℞');const d=dignity(p);if(d==='उच्च')marks.push('उ');else if(d==='नीच')marks.push('नी');else if(d==='स्वगृही')marks.push('स्व');if(combust(p,sun))marks.push('द');return `${SHORT[p.name]||String(p.name||'').slice(0,2)}${marks.join('·')}`};
-const planetTitle=(p,sun)=>{const labels=[p.name,p.signName||RASHIS[p.sign],`${Math.floor(Number(p.degree||0))}° ${Math.floor((Number(p.degree||0)%1)*60)}′`,dignity(p)];if(p.retrograde)labels.push('वक्री');if(combust(p,sun))labels.push('दग्ध/Combust');return labels.join(' · ')};
-const byHouse=(data)=>{const houses=Array.from({length:12},()=>[]),asc=Number(data?.ascendant?.sign??0);(data?.planets||[]).forEach(p=>{const sign=Number(p.sign);houses[(sign-asc+12)%12].push(p)});houses.ascSign=asc;return houses};
+const planetText=(p,sun)=>{const marks=[];if(p.retrograde)marks.push('℞');const d=dignity(p);if(d==='उच्च')marks.push('उ');else if(d==='नीच')marks.push('नी');else if(d==='स्वगृही')marks.push('स्व');if(combust(p,sun))marks.push('द');return `${SHORT[p.name]||String(p.name||'').slice(0,2)}${marks.length?'·'+marks.join('·'):''}`};
+const planetTitle=(p,sun)=>{const deg=Number(p.degree??0),labels=[p.name,p.signName||RASHIS[p.sign],`${Math.floor(deg)}° ${Math.floor((deg%1)*60)}′`,dignity(p)];if(p.retrograde)labels.push('वक्री');if(combust(p,sun))labels.push('दग्ध/Combust');return labels.join(' · ')};
+const byHouse=data=>{const houses=Array.from({length:12},()=>[]),asc=Number(data?.ascendant?.sign??0);(data?.planets||[]).forEach(p=>{const sign=Number(p.sign);houses[(sign-asc+12)%12].push(p)});houses.ascSign=asc;return houses};
 const placementHouses=(placements,ascSign=0)=>{const houses=Array.from({length:12},()=>[]);(placements||[]).forEach(p=>{const sign=Number(p.sign);houses[(sign-Number(ascSign)+12)%12].push(p)});houses.ascSign=Number(ascSign);return houses};
-const planetLines=(items,sun)=>items.length?items.map((p,i)=>`<tspan x="0" dy="${i?16:0}">${esc(planetText(p,sun))}</tspan>`).join(''):'<tspan x="0" dy="0">—</tspan>';
+const planetLines=(items,sun)=>items.length?items.map((p,i)=>`<tspan x="0" dy="${i?16:0}">${esc(planetText(p,sun))}<title>${esc(planetTitle(p,sun))}</title></tspan>`).join(''):'<tspan x="0" dy="0">—</tspan>';
 const NORTH_PATHS=[
  {h:1,d:'M200 20 L380 200 L200 380 L20 200 Z'},
  {h:2,d:'M20 20 L200 20 L20 200 Z'},
