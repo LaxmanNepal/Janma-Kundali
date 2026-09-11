@@ -1,12 +1,20 @@
-const CACHE = 'janma-kundali-v7';
+const CACHE = 'janma-kundali-v8';
 const OFFLINE_FALLBACK = './index.html';
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.add(OFFLINE_FALLBACK)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache => cache.add(OFFLINE_FALLBACK))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', event => {
@@ -17,13 +25,15 @@ self.addEventListener('fetch', event => {
   const isNavigation = event.request.mode === 'navigate' || event.request.destination === 'document';
   const isCodeOrStyle = /\.(?:js|mjs|css|json|webmanifest)$/i.test(url.pathname);
 
-  // Never let a stale JS/CSS/JSON module brick the application after a deployment.
+  // Network-first for application files prevents an old deployment from breaking the app.
   if (isCodeOrStyle || isNavigation) {
     event.respondWith(
-      fetch(event.request).then(response => {
-        if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
-        return response;
-      }).catch(() => caches.match(event.request).then(cached => cached || (isNavigation ? caches.match(OFFLINE_FALLBACK) : Response.error())))
+      fetch(event.request)
+        .then(response => {
+          if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then(cached => cached || (isNavigation ? caches.match(OFFLINE_FALLBACK) : Response.error())))
     );
     return;
   }
