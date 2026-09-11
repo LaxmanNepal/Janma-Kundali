@@ -1,4 +1,4 @@
-const CACHE = 'janma-kundali-v8';
+const CACHE = 'janma-kundali-v9';
 const OFFLINE_FALLBACK = './index.html';
 
 self.addEventListener('install', event => {
@@ -25,10 +25,10 @@ self.addEventListener('fetch', event => {
   const isNavigation = event.request.mode === 'navigate' || event.request.destination === 'document';
   const isCodeOrStyle = /\.(?:js|mjs|css|json|webmanifest)$/i.test(url.pathname);
 
-  // Network-first for application files prevents an old deployment from breaking the app.
+  // Always prefer the current deployment for navigation and application assets.
   if (isCodeOrStyle || isNavigation) {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-store' })
         .then(response => {
           if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
           return response;
