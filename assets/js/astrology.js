@@ -5,27 +5,108 @@ const NAKSHATRAS=['अश्विनी','भरणी','कृत्तिक�
 const PLANETS=[[Planet.Sun,'सूर्य'],[Planet.Moon,'चन्द्र'],[Planet.Mars,'मंगल'],[Planet.Mercury,'बुध'],[Planet.Jupiter,'गुरु'],[Planet.Venus,'शुक्र'],[Planet.Saturn,'शनि']];
 const NAK_LORDS=['केतु','शुक्र','सूर्य','चन्द्र','मंगल','राहु','गुरु','शनि','बुध'];
 const DASHA_YEARS={केतु:7,शुक्र:20,सूर्य:6,चन्द्र:10,मंगल:7,राहु:18,गुरु:16,शनि:19,बुध:17};
-const FALLBACK_LOCATION={lat:27.7172,lon:85.324,tz:'Asia/Kathmandu',approximate:true};
-const LOCATION={}; let locationsPromise;
 const SIDEREAL_FLAGS=CalculationFlag.Sidereal|CalculationFlag.Speed;
-const norm=n=>((n%360)+360)%360;
+const norm=n=>((Number(n)%360)+360)%360;
 const signAt=lon=>Math.floor(norm(lon)/30);
-const nakAt=lon=>{const x=norm(lon),span=360/27,index=Math.min(26,Math.floor(x/span)),pada=Math.floor((x%span)/(span/4))+1;return{index,pada,name:NAKSHATRAS[index],lord:NAK_LORDS[index%9]}};
-const degText=x=>`${Math.floor(x)}° ${Math.floor((x-Math.floor(x))*60)}′`;
+const nakAt=lon=>{const x=norm(lon),span=360/27,index=Math.min(26,Math.floor(x/span)),pada=Math.min(4,Math.floor((x%span)/(span/4))+1);return{index,pada,name:NAKSHATRAS[index],lord:NAK_LORDS[index%9]}};
+const degText=x=>`${Math.floor(Number(x)||0)}° ${Math.floor(((Number(x)||0)-Math.floor(Number(x)||0))*60)}′`;
+
+const LOCATION={};
+let locationsPromise=null;
+let swePromise=null;
 
 async function loadLocations(){
   if(!locationsPromise){
     const url=new URL('../../data/locations.json',import.meta.url);
-    locationsPromise=fetch(url).then(r=>r.ok?r.json():{}).catch(()=>({})).then(data=>{Object.assign(LOCATION,data);return LOCATION});
+    locationsPromise=fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(`स्थान database लोड भएन (${r.status})`);return r.json()}).then(data=>{Object.assign(LOCATION,data||{});return LOCATION}).catch(err=>{locationsPromise=null;throw err});
   }
   return locationsPromise;
 }
-function getZoneOffset(date,timeZone){const parts=new Intl.DateTimeFormat('en-US',{timeZone,timeZoneName:'longOffset',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date),zone=parts.find(p=>p.type==='timeZoneName')?.value||'GMT+00:00',m=zone.match(/GMT([+-])(\d{2})(?::?(\d{2}))?/);if(!m)return 0;return(m[1]==='-'?-1:1)*(Number(m[2])+Number(m[3]||0)/60)}
-function localToUtc(date,time,timeZone){const[y,m,d]=date.split('-').map(Number),[hh,mm]=time.split(':').map(Number),naive=new Date(Date.UTC(y,m-1,d,hh,mm,0));let offset=getZoneOffset(naive,timeZone),utc=new Date(naive.getTime()-offset*3600000);for(let i=0;i<2;i++){const corrected=getZoneOffset(utc,timeZone);if(corrected===offset)break;offset=corrected;utc=new Date(naive.getTime()-offset*3600000)}return utc}
-async function parseLocation(place){const data=await loadLocations(),raw=String(place||'').trim(),exact=data[raw];if(exact)return{...exact,timezone:exact.tz};const key=Object.keys(data).find(k=>raw.toLowerCase().includes(k.split(',')[0].toLowerCase()));if(key)return{...data[key],timezone:data[key].tz};return FALLBACK_LOCATION}
-export async function calculateKundali({date,time,place}){const loc=await parseLocation(place),utc=localToUtc(date,time,loc.timezone||loc.tz||'Asia/Kathmandu'),swe=new SwissEphemeris();await swe.init();swe.setSiderealMode(SiderealMode.Lahiri);const jd=swe.dateToJulianDay(utc),planets=PLANETS.map(([id,name])=>{const p=swe.calculatePosition(jd,id,SIDEREAL_FLAGS),longitude=norm(p.longitude),s=signAt(longitude),nak=nakAt(longitude);return{id,name,longitude,sign:s,signName:RASHIS[s][0],degree:longitude%30,nakshatra:nak.name,pada:nak.pada,lord:nak.lord,retrograde:p.longitudeSpeed<0,latitude:p.latitude}});const houses=swe.calculateHouses(jd,loc.lat,loc.lon,HouseSystem.WholeSign),asc=norm(houses.ascendant),ascSign=signAt(asc),moon=planets.find(p=>p.id===Planet.Moon),moonNak=nakAt(moon.longitude),nodes=getNodes(swe,jd);planets.push(nodes.rahu,nodes.ketu);return{engine:'Swiss Ephemeris WASM',sidereal:'Lahiri',houseSystem:'Whole Sign',input:{date,time,place,utc:utc.toISOString(),lat:loc.lat,lon:loc.lon,timezone:loc.timezone||loc.tz,approximate:!!loc.approximate},ascendant:{longitude:asc,sign:ascSign,signName:RASHIS[ascSign][0],degree:asc%30},rashi:{sign:moon.sign,signName:RASHIS[moon.sign][0],english:RASHIS[moon.sign][1]},moonNakshatra:moonNak,planets,houses:houses.cusps||[],dasha:buildVimshottari(moon.longitude,utc),navamsa:planets.map(p=>({name:p.name,sign:navamsaSign(p.longitude),longitude:p.longitude})),meta:{locationApproximate:!!loc.approximate}}}
-function getNodes(swe,jd){const p=swe.calculatePosition(jd,LunarPoint.TrueNode,SIDEREAL_FLAGS),rahuLon=norm(p.longitude),ketuLon=norm(rahuLon+180),make=(name,longitude)=>{const s=signAt(longitude),n=nakAt(longitude);return{id:name==='राहु'?'rahu':'ketu',name,longitude,sign:s,signName:RASHIS[s][0],degree:longitude%30,nakshatra:n.name,pada:n.pada,lord:n.lord,retrograde:true,latitude:0}};return{rahu:make('राहु',rahuLon),ketu:make('केतु',ketuLon)}}
-function navamsaSign(longitude){const s=signAt(longitude),part=Math.min(8,Math.floor((norm(longitude)%30)/((30/9)))),movable=[0,3,6,9].includes(s),fixed=[1,4,7,10].includes(s),start=movable?s:fixed?(s+8)%12:(s+4)%12;return RASHIS[(start+part)%12][0]}
+
+function getZoneOffset(date,timeZone){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone,timeZoneName:'longOffset',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
+  const zone=parts.find(p=>p.type==='timeZoneName')?.value||'GMT+00:00';
+  const m=zone.match(/GMT([+-])(\d{2})(?::?(\d{2}))?/);
+  if(!m)return 0;
+  return(m[1]==='-'?-1:1)*(Number(m[2])+Number(m[3]||0)/60);
+}
+
+function localToUtc(date,time,timeZone){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date)))throw new Error('मिति YYYY-MM-DD हुनुपर्छ');
+  if(!/^\d{2}:\d{2}$/.test(String(time)))throw new Error('समय HH:MM हुनुपर्छ');
+  const[y,m,d]=date.split('-').map(Number),[hh,mm]=time.split(':').map(Number);
+  if(!Number.isInteger(y)||m<1||m>12||d<1||d>31||hh>23||mm>59)throw new Error('अमान्य जन्म मिति वा समय');
+  const naive=new Date(Date.UTC(y,m-1,d,hh,mm,0));
+  let offset=getZoneOffset(naive,timeZone);
+  let utc=new Date(naive.getTime()-offset*3600000);
+  for(let i=0;i<3;i++){
+    const corrected=getZoneOffset(utc,timeZone);
+    if(corrected===offset)break;
+    offset=corrected;utc=new Date(naive.getTime()-offset*3600000);
+  }
+  return utc;
+}
+
+async function parseLocation(place){
+  const data=await loadLocations();
+  const raw=String(place||'').trim();
+  if(!raw)throw new Error('जन्म स्थान चयन गर्नुहोस्');
+  if(data[raw])return{...data[raw],timezone:data[raw].tz,name:raw,approximate:false};
+  const rawLower=raw.toLowerCase();
+  const key=Object.keys(data).find(k=>rawLower===k.toLowerCase()||rawLower.startsWith(`${k.split(',')[0].toLowerCase()},`));
+  if(key)return{...data[key],timezone:data[key].tz,name:key,approximate:false};
+  throw new Error(`“${raw}” स्थान database मा भेटिएन। सूचीबाट उपलब्ध स्थान चयन गर्नुहोस्।`);
+}
+
+async function getSwissEphemeris(){
+  if(!swePromise){
+    swePromise=(async()=>{
+      const swe=new SwissEphemeris();
+      await swe.init();
+      swe.setSiderealMode(SiderealMode.Lahiri);
+      return swe;
+    })().catch(err=>{swePromise=null;throw new Error(`Swiss Ephemeris सुरु हुन सकेन: ${err?.message||err}`)});
+  }
+  return swePromise;
+}
+
+export async function calculateKundali({date,time,place}){
+  const loc=await parseLocation(place);
+  const utc=localToUtc(date,time,loc.timezone||loc.tz);
+  if(!Number.isFinite(Number(loc.lat))||!Number.isFinite(Number(loc.lon)))throw new Error('स्थानको latitude/longitude अमान्य छ');
+  const swe=await getSwissEphemeris();
+  const jd=swe.dateToJulianDay(utc);
+  const planets=PLANETS.map(([id,name])=>{
+    const p=swe.calculatePosition(jd,id,SIDEREAL_FLAGS);
+    if(!p||!Number.isFinite(Number(p.longitude)))throw new Error(`${name} को position निकाल्न सकिएन`);
+    const longitude=norm(p.longitude),s=signAt(longitude),nak=nakAt(longitude);
+    return{id,name,longitude,sign:s,signName:RASHIS[s][0],degree:longitude%30,nakshatra:nak.name,pada:nak.pada,lord:nak.lord,retrograde:Number(p.longitudeSpeed)<0,latitude:Number(p.latitude)||0};
+  });
+  const houses=swe.calculateHouses(jd,Number(loc.lat),Number(loc.lon),HouseSystem.WholeSign);
+  if(!houses||!Number.isFinite(Number(houses.ascendant)))throw new Error('लग्न गणना गर्न सकिएन');
+  const asc=norm(houses.ascendant),ascSign=signAt(asc);
+  const moon=planets.find(p=>p.id===Planet.Moon);
+  const nodes=getNodes(swe,jd);
+  planets.push(nodes.rahu,nodes.ketu);
+  return{
+    engine:'Swiss Ephemeris WASM',sidereal:'Lahiri',houseSystem:'Whole Sign',
+    input:{date,time,place:loc.name,utc:utc.toISOString(),lat:Number(loc.lat),lon:Number(loc.lon),timezone:loc.timezone||loc.tz,approximate:false},
+    ascendant:{longitude:asc,sign:ascSign,signName:RASHIS[ascSign][0],degree:asc%30},
+    rashi:{sign:moon.sign,signName:RASHIS[moon.sign][0],english:RASHIS[moon.sign][1]},
+    moonNakshatra:nakAt(moon.longitude),planets,houses:houses.cusps||[],dasha:buildVimshottari(moon.longitude,utc),
+    navamsa:planets.map(p=>({name:p.name,sign:navamsaSign(p.longitude),longitude:p.longitude})),
+    meta:{locationApproximate:false,calculatedAt:new Date().toISOString(),ephemeris:'Moshier built-in'}
+  };
+}
+
+function getNodes(swe,jd){
+  const p=swe.calculatePosition(jd,LunarPoint.TrueNode,SIDEREAL_FLAGS),rahuLon=norm(p.longitude),ketuLon=norm(rahuLon+180);
+  const make=(name,longitude)=>{const s=signAt(longitude),n=nakAt(longitude);return{id:name==='राहु'?'rahu':'ketu',name,longitude,sign:s,signName:RASHIS[s][0],degree:longitude%30,nakshatra:n.name,pada:n.pada,lord:n.lord,retrograde:true,latitude:0}};
+  return{rahu:make('राहु',rahuLon),ketu:make('केतु',ketuLon)};
+}
+
+function navamsaSign(longitude){const s=signAt(longitude),part=Math.min(8,Math.floor((norm(longitude)%30)/(30/9))),movable=[0,3,6,9].includes(s),fixed=[1,4,7,10].includes(s),start=movable?s:fixed?(s+8)%12:(s+4)%12;return RASHIS[(start+part)%12][0]}
 function addDashaYears(date,years){return new Date(date.getTime()+years*365.2425*86400000)}
 function buildVimshottari(moonLongitude,birthDate){const nak=nakAt(moonLongitude),lord=nak.lord,span=360/27,elapsed=(norm(moonLongitude)%span)/span,remaining=DASHA_YEARS[lord]*(1-elapsed),order=['केतु','शुक्र','सूर्य','चन्द्र','मंगल','राहु','गुरु','शनि','बुध'],startIndex=order.indexOf(lord);let cursor=new Date(birthDate),list=[];for(let i=0;i<9;i++){const dLord=order[(startIndex+i)%9],years=i===0?remaining:DASHA_YEARS[dLord],end=addDashaYears(cursor,years);list.push({lord:dLord,start:cursor.toISOString().slice(0,10),end:end.toISOString().slice(0,10),years:Number(years.toFixed(4))});cursor=end}return{birthLord:lord,balanceYears:Number(remaining.toFixed(4)),periods:list,method:'Vimshottari · 365.2425-day year'}}
-export{RASHIS,NAKSHATRAS,PLANETS,LOCATION,degText,signAt,nakAt,loadLocations,navamsaSign,buildVimshottari,localToUtc};
+
+export{RASHIS,NAKSHATRAS,PLANETS,LOCATION,degText,signAt,nakAt,loadLocations,navamsaSign,buildVimshottari,localToUtc,parseLocation};
