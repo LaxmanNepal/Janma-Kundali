@@ -1,4 +1,4 @@
-const CACHE = 'janma-kundali-v6';
+const CACHE = 'janma-kundali-v7';
 const OFFLINE_FALLBACK = './index.html';
 
 self.addEventListener('install', event => {
@@ -14,17 +14,24 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  // HTML/JS/CSS must prefer the newest deployed version. Cached fallback is only for offline use.
   const isNavigation = event.request.mode === 'navigate' || event.request.destination === 'document';
+  const isCodeOrStyle = /\.(?:js|mjs|css|json|webmanifest)$/i.test(url.pathname);
+
+  // Never let a stale JS/CSS/JSON module brick the application after a deployment.
+  if (isCodeOrStyle || isNavigation) {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
+        return response;
+      }).catch(() => caches.match(event.request).then(cached => cached || (isNavigation ? caches.match(OFFLINE_FALLBACK) : Response.error())))
+    );
+    return;
+  }
+
   event.respondWith(
-    isNavigation
-      ? fetch(event.request).then(response => {
-          if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
-          return response;
-        }).catch(() => caches.match(event.request).then(c => c || caches.match(OFFLINE_FALLBACK)))
-      : caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-          if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
-          return response;
-        }))
+    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+      if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
+      return response;
+    }))
   );
 });
