@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { dignityForPlanet, houseFromLagna, houseLords, planetaryAspects } from './planetary-strength.js';
 assert.equal(dignityForPlanet('सूर्य',0),'exalted');
-assert.equal(dignityForPlanet('सूर्य',10),'debilitated');
+// सूर्यको नीच राशि तुला (राशि क्रमाङ्क 6) हो।
+assert.equal(dignityForPlanet('सूर्य',6),'debilitated');
 assert.equal(dignityForPlanet('मंगल',0),'own');
 assert.equal(houseFromLagna(3,3),1);
 assert.equal(houseFromLagna(4,3),2);
