@@ -26,17 +26,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+
       - name: Install dependencies
         run: npm install
+
       - name: Run regression tests
         run: npm test
+
       - name: Build
         run: npm run build
+
       - name: Prepare static runtime files
         run: |
           mkdir -p dist/data
@@ -44,6 +48,7 @@ jobs:
           cp sw.js dist/sw.js
           cp -r data/. dist/data/
           touch dist/.nojekyll
+
       - name: Verify build output
         run: |
           test -f dist/index.html
@@ -52,12 +57,15 @@ jobs:
           test -f dist/data/locations.json
           test -f dist/data/nakshatra.json
           test -f dist/data/panchanga.json
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
