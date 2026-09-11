@@ -56,7 +56,7 @@ Static Web / PWA
 
 ## Accuracy and scope
 
-The astronomical layer is ephemeris-based and runs in the browser. Curated locations use IANA timezone identifiers; unsupported places are marked approximate and fall back to Kathmandu coordinates. Divisional-chart and matching conventions can vary between Jyotish traditions, so the application labels these rules rather than presenting them as universal facts.
+The astronomical layer is ephemeris-based and runs in the browser. Curated locations use IANA timezone identifiers. Unsupported places must be explicitly selected/configured rather than silently substituted with Kathmandu coordinates. Divisional-chart and matching conventions can vary between Jyotish traditions, so the application labels these rules rather than presenting them as universal facts.
 
 Panchanga in the current release is a birth-time foundation, not a full daily almanac with sunrise/sunset and festival calendars. Matching is a traditional astrology calculation and is not a scientific compatibility test or a guaranteed prediction.
 
@@ -76,7 +76,7 @@ npm run preview
 
 ## Deployment
 
-GitHub Actions builds the Vite application and deploys `dist/` to GitHub Pages on pushes to `main`. The app is also structured so the generated static site can be hosted on a custom domain or subdirectory.
+GitHub Actions builds the Vite application into `dist/`, mirrors the production build into `docs/`, and commits the generated static site to `main`. Configure repository Pages to serve the `main` branch from `/docs`.
 
 ## Future production extensions
 
