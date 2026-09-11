@@ -1,8 +1,4 @@
 import { calculateKundali, RASHIS, degText, loadLocations } from './astrology.js';
-import { renderKundaliChart, renderNorthIndianVargaChart } from '../../src/chart-renderer.js';
-import { calculatePanchanga } from '../../src/panchanga.js';
-import { calculateVargas, VARGAS } from '../../src/varga.js';
-import { calculateGochar } from '../../src/gochar.js';
 import { BS_MONTHS, MIN_BS_YEAR, MAX_BS_YEAR, adStringToBs, bsToAdString, daysInMonth, bsDateValid } from './bs-date.js';
 
 const $ = id => document.getElementById(id);
@@ -59,9 +55,17 @@ function getBirthDate(){
   const y=Number($('bsYear').value),m=Number($('bsMonth').value),d=Number($('bsDay').value);if(!bsDateValid(y,m,d))throw Error('अमान्य BS मिति');
   const date=bsToAdString(y,m,d);return {date,display:`${y} ${BS_MONTHS[m-1]} ${d} → AD ${date}`};
 }
-function renderChart(data){
-  renderKundaliChart($('chart'),data,chartMode);
-  document.querySelectorAll('.chart-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.chartMode===chartMode));
+
+async function renderChart(data){
+  try {
+    const { renderKundaliChart } = await import('../../src/chart-renderer.js');
+    renderKundaliChart($('chart'),data,chartMode);
+    document.querySelectorAll('.chart-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.chartMode===chartMode));
+  } catch (e) {
+    const host=$('chart');
+    if(host) host.innerHTML='<div class="accuracy-note">कुण्डली गणना सफल भयो, तर चार्ट चित्र बनाउन सकिएन।</div>';
+    console.warn('चार्ट renderer',e);
+  }
 }
 function renderPlanets(data){
   const order=['सूर्य','चन्द्र','मंगल','बुध','गुरु','शुक्र','शनि','राहु','केतु'];
@@ -75,8 +79,10 @@ function renderBasicReport(data,birth,time,place){
   $('lagna').textContent=data.ascendant.signName;$('element').textContent=RASHIS[data.rashi.sign][2];$('quality').textContent=RASHIS[data.rashi.sign][3];
   renderChart(data);renderPlanets(data);$('result').classList.remove('hidden');$('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function renderVargasSafe(data){
+
+async function renderVargasSafe(data){
   try{
+    const [{ calculateVargas, VARGAS },{ renderNorthIndianVargaChart }] = await Promise.all([import('../../src/varga.js'),import('../../src/chart-renderer.js')]);
     const host=$('vargaReport');if(!host)return;const charts=calculateVargas(data.planets);let active=localStorage.getItem('jk-varga')||'D9';
     host.innerHTML=`<div class="panel varga-panel"><div class="panel-title"><div><h3>वर्ग कुण्डली · D1–D60</h3><span>उत्तर भारतीय कुण्डली</span></div><span id="vargaName">नवांश · D9</span></div><div class="varga-tabs">${VARGAS.map(v=>`<button type="button" class="varga-btn${v.key===active?' active':''}" data-varga="${v.key}">${v.key}</button>`).join('')}</div><div id="vargaContent"></div><p class="accuracy-note">केही वर्गका नियम परम्पराअनुसार फरक हुन सक्छन्।</p></div>`;
     const draw=key=>{const v=charts.find(x=>x.key===key)||charts[0];active=v.key;localStorage.setItem('jk-varga',active);const ascSign=Number(v.calc(data.ascendant.longitude));$('vargaName').textContent=`${v.name} · ${v.key}`;$('vargaContent').innerHTML=`<div class="varga-chart-wrap"><div class="varga-chart-toolbar"><span>उत्तर भारतीय कुण्डली</span><small>लग्न: ${RASHIS[ascSign][0]}</small></div><div id="activeVargaChart"></div></div>`;renderNorthIndianVargaChart($('activeVargaChart'),v.placements,ascSign,{title:`${v.name} · ${v.key}`});host.querySelectorAll('.varga-btn').forEach(b=>b.classList.toggle('active',b.dataset.varga===v.key))};
@@ -85,15 +91,17 @@ function renderVargasSafe(data){
 }
 async function renderOptional(data,birth,time){
   try{
+    const { calculatePanchanga } = await import('../../src/panchanga.js');
     const p=await calculatePanchanga(birth.date,time,data.input.lat,data.input.lon,data.input.timezone||'Asia/Kathmandu');
     window.__panchanga=p;
     const t=p.timings||{};$('extendedReport').innerHTML=`<div class="panel"><div class="panel-title"><h3>पञ्चाङ्ग</h3><span>${p.vara}</span></div><div class="panchanga-grid"><div><small>तिथि</small><b>${p.tithi}</b><span>${p.paksha}</span></div><div><small>योग</small><b>${p.yoga}</b></div><div><small>करण</small><b>${p.karana}</b></div><div><small>नक्षत्र</small><b>${p.nakshatra}</b><span>पाद ${p.nakshatraPada}</span></div><div><small>सूर्योदय</small><b>${t.sunrise||'—'}</b></div><div><small>सूर्यास्त</small><b>${t.sunset||'—'}</b></div></div></div>`;
   }catch(e){$('extendedReport').innerHTML='<div class="panel accuracy-note">पञ्चाङ्ग सेवा उपलब्ध हुन सकेन। मुख्य कुण्डली सुरक्षित रूपमा तयार गरिएको छ।</div>';console.warn(e)}
   try{
+    const { calculateGochar } = await import('../../src/gochar.js');
     const now=new Date(),local=new Intl.DateTimeFormat('en-CA',{timeZone:data.input.timezone||'Asia/Kathmandu',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
     const g=await calculateGochar({date:local,time:'12:00',timezone:data.input.timezone||'Asia/Kathmandu',natalMoonSign:data.rashi.sign,natalLagnaSign:data.ascendant.sign});window.__gochar=g;
     const host=$('gocharReport');if(host)host.innerHTML=`<div class="panel gochar-panel"><div class="panel-title"><h3>गोचर</h3><span>${g.date} · लाहिरी निरयन</span></div><div class="gochar-summary"><div><small>शनि</small><b>${g.focus.saturn.signName}</b><span>${Math.floor(g.focus.saturn.degree)}°</span></div><div><small>गुरु</small><b>${g.focus.jupiter.signName}</b><span>${Math.floor(g.focus.jupiter.degree)}°</span></div><div><small>साढे साती</small><b>${g.sadeSati.active?'हो':'होइन'}</b><span>${g.sadeSati.phaseName}</span></div></div></div>`;
-  }catch(e){$('gocharReport').innerHTML='<div class="panel accuracy-note">गोचर अहिले निकाल्न सकेन। मुख्य कुण्डली सुरक्षित रूपमा तयार गरिएको छ।</div>';console.warn(e)}
+  }catch(e){const host=$('gocharReport');if(host)host.innerHTML='<div class="panel accuracy-note">गोचर अहिले निकाल्न सकेन। मुख्य कुण्डली सुरक्षित रूपमा तयार गरिएको छ।</div>';console.warn(e)}
   renderVargasSafe(data);
 }
 async function generate(){
