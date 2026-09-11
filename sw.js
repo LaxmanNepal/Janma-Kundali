@@ -1,4 +1,4 @@
-const CACHE = 'janma-kundali-v4';
+const CACHE = 'janma-kundali-v5';
 const OFFLINE_FALLBACK = './index.html';
 
 self.addEventListener('install', event => {
