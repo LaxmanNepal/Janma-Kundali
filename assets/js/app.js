@@ -6,6 +6,7 @@ import './birth-profiles.js';
 import './profile-result-sync.js';
 import './astrology-dashboard.js';
 import './dasha-dashboard.js';
+import './transit-intelligence.js';
 
 const locationStyle = document.createElement('link');
 locationStyle.rel = 'stylesheet';
@@ -27,9 +28,14 @@ dashaStyle.rel = 'stylesheet';
 dashaStyle.href = new URL('../css/dasha-dashboard.css', import.meta.url);
 document.head.appendChild(dashaStyle);
 
+const transitStyle = document.createElement('link', { });
+transitStyle.rel = 'stylesheet';
+transitStyle.href = new URL('../css/transit-intelligence.css', import.meta.url);
+document.head.appendChild(transitStyle);
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=13', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js?v=14', { scope: './' }).catch(err => {
       console.warn('[Janma Kundali] service worker registration skipped:', err);
     });
   }, { once: true });
