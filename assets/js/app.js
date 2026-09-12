@@ -28,14 +28,14 @@ dashaStyle.rel = 'stylesheet';
 dashaStyle.href = new URL('../css/dasha-dashboard.css', import.meta.url);
 document.head.appendChild(dashaStyle);
 
-const transitStyle = document.createElement('link', { });
+const transitStyle = document.createElement('link');
 transitStyle.rel = 'stylesheet';
 transitStyle.href = new URL('../css/transit-intelligence.css', import.meta.url);
 document.head.appendChild(transitStyle);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=14', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js?v=15', { scope: './' }).catch(err => {
       console.warn('[Janma Kundali] service worker registration skipped:', err);
     });
   }, { once: true });
