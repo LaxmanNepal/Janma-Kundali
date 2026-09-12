@@ -1,4 +1,4 @@
-const CACHE = 'janma-kundali-v13';
+const CACHE = 'janma-kundali-v14';
 const OFFLINE_FALLBACK = './index.html';
 
 self.addEventListener('install', event => {
@@ -15,7 +15,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (url.origin !== location.origin) return;
   if (/\.(js|mjs|css|json|webmanifest)$/.test(url.pathname)) {
-    event.respondWith(fetch(request, {cache:'no-store'}).then(response => { if (response.ok) { const copy=response.clone(); caches.open(CACHE).then(cache=>cache.put(request,copy)); } return response; }).catch(() => caches.match(request)));
+    event.respondWith(fetch(request, {cache:'no-store'}).then(response => { if (response.ok) { const copy=response.clone(); caches.open(CACHE).then(cache => cache.put(request,copy)); } return response; }).catch(() => caches.match(request)));
     return;
   }
   if (request.mode === 'navigate') {
