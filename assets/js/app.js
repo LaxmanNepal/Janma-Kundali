@@ -8,6 +8,7 @@ import './astrology-dashboard.js';
 import './dasha-dashboard.js';
 import './transit-intelligence.js';
 import './transit-calendar.js';
+import './transit-pro.js';
 
 const locationStyle = document.createElement('link');
 locationStyle.rel = 'stylesheet';
@@ -38,6 +39,11 @@ const transitCalendarStyle = document.createElement('link');
 transitCalendarStyle.rel = 'stylesheet';
 transitCalendarStyle.href = new URL('../css/transit-calendar.css', import.meta.url);
 document.head.appendChild(transitCalendarStyle);
+
+const transitProStyle = document.createElement('link');
+transitProStyle.rel = 'stylesheet';
+transitProStyle.href = new URL('../css/transit-pro.css', import.meta.url);
+document.head.appendChild(transitProStyle);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
