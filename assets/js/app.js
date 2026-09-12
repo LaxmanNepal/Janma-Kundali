@@ -7,6 +7,7 @@ import './profile-result-sync.js';
 import './astrology-dashboard.js';
 import './dasha-dashboard.js';
 import './transit-intelligence.js';
+import './transit-calendar.js';
 
 const locationStyle = document.createElement('link');
 locationStyle.rel = 'stylesheet';
@@ -35,7 +36,7 @@ document.head.appendChild(transitStyle);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=17', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js?v=18', { scope: './' }).catch(err => {
       console.warn('[Janma Kundali] service worker registration skipped:', err);
     });
   }, { once: true });
