@@ -34,6 +34,11 @@ transitStyle.rel = 'stylesheet';
 transitStyle.href = new URL('../css/transit-intelligence.css', import.meta.url);
 document.head.appendChild(transitStyle);
 
+const transitCalendarStyle = document.createElement('link');
+transitCalendarStyle.rel = 'stylesheet';
+transitCalendarStyle.href = new URL('../css/transit-calendar.css', import.meta.url);
+document.head.appendChild(transitCalendarStyle);
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js?v=18', { scope: './' }).catch(err => {
