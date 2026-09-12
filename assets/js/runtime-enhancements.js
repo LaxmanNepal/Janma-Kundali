@@ -28,6 +28,41 @@ function toast(message, kind='info') {
   window.__jkToastTimer = setTimeout(() => box.classList.remove('show'), 4500);
 }
 
+async function enhancePlacePicker() {
+  const input = $('place');
+  const list = $('places');
+  if (!input || !list) return;
+
+  try {
+    const response = await fetch(new URL('../../data/locations.json', import.meta.url), {cache:'no-store'});
+    if (!response.ok) throw new Error(`स्थान सूची ${response.status}`);
+    const locations = await response.json();
+    const names = Object.keys(locations).filter((name, index, arr) => arr.indexOf(name) === index);
+    list.replaceChildren(...names.map(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      return option;
+    }));
+
+    input.setAttribute('aria-autocomplete', 'list');
+    input.addEventListener('change', () => {
+      const value = input.value.trim();
+      if (!value) return;
+      const exact = names.find(name => name.toLowerCase() === value.toLowerCase());
+      if (exact) {
+        input.value = exact;
+        localStorage.setItem('jk-last-place', exact);
+        toast(`जन्म स्थान: ${exact}`, 'success');
+      }
+    });
+
+    const last = localStorage.getItem('jk-last-place');
+    if (!input.value && last && names.includes(last)) input.value = last;
+  } catch (error) {
+    console.warn('[Janma Kundali] place picker', error);
+  }
+}
+
 function wire() {
   applyTheme();
 
@@ -49,6 +84,8 @@ function wire() {
   const originalAlert = window.alert;
   window.alert = message => toast(String(message), 'warning');
   window.__restoreAlert = () => { window.alert = originalAlert; };
+
+  void enhancePlacePicker();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then(reg => {
