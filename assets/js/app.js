@@ -35,7 +35,7 @@ document.head.appendChild(transitStyle);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=15', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js?v=16', { scope: './' }).catch(err => {
       console.warn('[Janma Kundali] service worker registration skipped:', err);
     });
   }, { once: true });
