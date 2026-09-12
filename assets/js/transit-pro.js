@@ -1,0 +1,82 @@
+import { calculateCurrentTransits } from './astrology.js';
+import { detectTransitEvents } from './transit-events.js';
+
+const $=id=>document.getElementById(id);
+const FOCUS={career:[6,10,2,11],finance:[2,11,5,9],marriage:[7,2,11]};
+const PLANET_WEIGHT={सूर्य:8,चन्द्र:6,मंगल:8,बुध:6,गुरु:10,शुक्र:7,शनि:10,राहु:9,केतु:9};
+const ICON={सूर्य:'☀️',चन्द्र:'🌙',मंगल:'♂️',बुध:'☿',गुरु:'♃',शुक्र:'♀️',शनि:'♄',राहु:'☊',केतु:'☋'};
+const escape=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+const dateTime=s=>new Intl.DateTimeFormat('ne-NP',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(s));
+const clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n));
+let events=[],timer=null,notifyTimer=null,lastData=null,busy=false;
+
+function mount(){
+  const host=$('transitIntelligence'); if(!host)return null;
+  let el=$('tiPro');
+  if(!el){el=document.createElement('section');el.id='tiPro';el.className='ti-pro';host.appendChild(el)}
+  return el;
+}
+function daysLeft(at){return Math.max(0,(new Date(at)-Date.now())/86400000)}
+function countdown(at){
+  const ms=new Date(at)-Date.now(); if(ms<=0)return 'अहिले / सुरु भइसकेको';
+  const d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000);
+  return d?`${d} दिन ${h} घण्टा बाँकी`:`${h} घण्टा ${m} मिनेट बाँकी`;
+}
+function strength(p){
+  if(!p)return 0;
+  let score=50+(PLANET_WEIGHT[p.name]||6);
+  if([1,5,9,10,11].includes(p.house))score+=18;
+  if([6,8,12].includes(p.house))score-=8;
+  if(p.retrograde)score-=10;
+  return clamp(score);
+}
+function level(s){return s>=72?'उच्च सक्रियता':s>=55?'मध्यम सक्रियता':'शान्त/पुनरावलोकन'}
+function areaScore(planets,houses){
+  let score=50;
+  planets.forEach(p=>{if(!houses.includes(p.house))return;const w=PLANET_WEIGHT[p.name]||6;score+=(p.retrograde?-w*.65:w*.8)});
+  return Math.round(clamp(score));
+}
+function scoreCard(label,key,planets){const s=areaScore(planets,FOCUS[key]);return `<div class="tip-score"><div><small>${label}</small><b>${s}</b></div><i><em style="width:${s}%"></em></i><span>${level(s)}</span></div>`}
+function nextEvents(){return events.filter(e=>new Date(e.at)>Date.now()).slice(0,8)}
+function downloadCalendar(list){
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Janma Kundali//Transit Pro//EN','CALSCALE:GREGORIAN'];
+  list.forEach((e,i)=>{const start=new Date(e.at),end=new Date(start.getTime()+60*60000);const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');lines.push('BEGIN:VEVENT',`UID:${e.id||i}@janma-kundali`,`DTSTAMP:${f(new Date())}`,`DTSTART:${f(start)}`,`DTEND:${f(end)}`,`SUMMARY:${e.planet} ${e.label} - Janma Kundali`,`DESCRIPTION:${e.fromSign||''} to ${e.toSign||''} | ${e.theme||''}`,'END:VEVENT')});lines.push('END:VCALENDAR');
+  const blob=new Blob([lines.join('\r\n')],{type:'text/calendar;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='janma-kundali-transits.ics';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function enableNotifications(){
+  if(!('Notification' in window)){alert('यो browser ले notification support गर्दैन।');return}
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted'){localStorage.removeItem('jk-transit-notifications');render(lastData);return}
+  localStorage.setItem('jk-transit-notifications','on');scheduleNotification();render(lastData);
+}
+function scheduleNotification(){
+  clearTimeout(notifyTimer);if(localStorage.getItem('jk-transit-notifications')!=='on')return;
+  const next=nextEvents()[0];if(!next)return;
+  const delay=Math.max(1000,new Date(next.at).getTime()-Date.now());
+  notifyTimer=setTimeout(()=>{if(Notification.permission==='granted')new Notification(`Janma Kundali · ${next.planet}`,{body:`${next.label} सुरु हुँदैछ · ${next.theme||''}`});scheduleNotification()},Math.min(delay,2147483647));
+}
+function render(data){
+  const el=mount();if(!el||!data)return;
+  const p=data?.planets||[],next=nextEvents()[0],important=nextEvents().filter(e=>e.priority==='high').slice(0,5);
+  const notifyOn=localStorage.getItem('jk-transit-notifications')==='on';
+  const strengthRows=p.map(x=>{const s=strength(x);return `<div class="tip-planet"><span>${ICON[x.name]||'✦'} ${escape(x.name)}</span><b>${s}</b><small>${x.house}H · ${x.retrograde?'वक्री':'मार्गी'}</small><i><em style="width:${s}%"></em></i></div>`}).join('');
+  const queue=important.map(e=>`<button class="tip-event" data-event="${escape(e.id)}"><span>${ICON[e.planet]||'✦'}</span><div><small>${escape(e.priority==='high'?'महत्त्वपूर्ण':'Transit Event')}</small><b>${escape(e.planet)} · ${escape(e.label)}</b><em>${dateTime(e.at)} · ${countdown(e.at)}</em></div><strong>›</strong></button>`).join('')||'<div class="tip-empty">अर्का प्रमुख event उपलब्ध छैन।</div>';
+  el.innerHTML=`<div class="panel tip-panel"><div class="panel-title"><div><h3>🚀 Transit Intelligence Pro</h3><span>Countdown · Personal Scores · Planet Strength · Notifications</span></div><span class="ti-live">PRO</span></div>
+  <div class="tip-hero">${next?`<div class="tip-next-icon">${ICON[next.planet]||'✦'}</div><div><small>अर्को Transit Event</small><h4>${escape(next.planet)} · ${escape(next.label)}</h4><p>${dateTime(next.at)} · ${escape(next.fromSign||'')} → ${escape(next.toSign||'')}</p></div><strong class="tip-countdown" data-countdown="${escape(next.at)}">${countdown(next.at)}</strong>`:'<div><h4>अर्को Transit Event भेटिएन</h4><p>भविष्यका event हरू यहाँ देखिनेछन्।</p></div>'}</div>
+  <div class="tip-actions"><button data-action="calendar">📅 Calendar (.ics)</button><button data-action="notify">${notifyOn?'🔔 Notifications ON':'🔔 Enable notifications'}</button><button data-action="refresh">↻ Refresh</button></div>
+  <div class="ti-section-title"><b>🎯 Personal Transit Score</b><small>परम्परागत ज्योतिषीय संकेत · 0–100</small></div><div class="tip-score-grid">${scoreCard('करियर','career',p)}${scoreCard('वित्त','finance',p)}${scoreCard('विवाह','marriage',p)}</div>
+  <div class="ti-section-title"><b>🪐 Planetary Transit Strength</b><small>House + motion आधारित heuristic</small></div><div class="tip-strength-grid">${strengthRows}</div>
+  <div class="ti-section-title"><b>⏳ Priority Event Queue</b><small>अर्का ${important.length} high-priority events</small></div><div class="tip-event-list">${queue}</div>
+  <div class="tip-note">Score र strength वैज्ञानिक मापन वा निश्चित भविष्यवाणी होइनन्। यी UI-level traditional-astrology heuristics हुन्; वास्तविक ग्रह गणना Swiss Ephemeris बाट आउँछ।</div></div>`;
+  el.querySelector('[data-action="calendar"]').onclick=()=>downloadCalendar(nextEvents());
+  el.querySelector('[data-action="notify"]').onclick=enableNotifications;
+  el.querySelector('[data-action="refresh"]').onclick=()=>refresh(true);
+  el.querySelectorAll('[data-event]').forEach(b=>b.onclick=()=>{const e=events.find(x=>x.id===b.dataset.event);if(e&&typeof window.__openTransitEvent==='function')window.__openTransitEvent(e)});
+  scheduleNotification();
+}
+async function refresh(force=false){
+  const data=window.__kundali;if(!data||busy)return;if(!force&&data===lastData&&events.length)return;
+  busy=true;try{events=await detectTransitEvents(data,{days:365});lastData=data;const transit=await calculateCurrentTransits(data);const host=mount();if(host){host.dataset.updated=transit.at;render(data)}}catch(err){const el=mount();if(el)el.innerHTML=`<div class="tip-panel panel"><b>Transit Pro error</b><p>${escape(err?.message||err)}</p></div>`}finally{busy=false}}
+function tick(){document.querySelectorAll('[data-countdown]').forEach(el=>el.textContent=countdown(el.dataset.countdown));scheduleNotification()}
+function init(){setTimeout(()=>refresh(),1500);setInterval(()=>refresh(),60000);timer=setInterval(tick,1000);const result=$('result');if(result){new MutationObserver(()=>{if(window.__kundali&&!$('tiPro'))refresh(true)}).observe(result,{childList:true,subtree:true})}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
