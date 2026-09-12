@@ -17,7 +17,7 @@ document.head.appendChild(profileStyle);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=10', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js?v=11', { scope: './' }).catch(err => {
       console.warn('[Janma Kundali] service worker registration skipped:', err);
     });
   }, { once: true });
