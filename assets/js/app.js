@@ -9,6 +9,7 @@ import './dasha-dashboard.js';
 import './transit-intelligence.js';
 import './transit-calendar.js';
 import './transit-pro.js';
+import './transit-pro-events.js';
 
 const locationStyle = document.createElement('link');
 locationStyle.rel = 'stylesheet';
