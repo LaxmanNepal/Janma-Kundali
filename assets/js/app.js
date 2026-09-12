@@ -18,13 +18,14 @@ import './pdf-studio.js';
 import './yoga-dashboard.js';
 import './planetary-strength-dashboard.js';
 import './life-area-dashboard.js';
+import './timeline-dashboard.js';
 
-const styles=['location-picker','birth-profiles','astrology-dashboard','dasha-dashboard','transit-intelligence','transit-calendar','transit-pro','transit-forecast','personal-intelligence','ai-report','full-report','pdf-studio','yoga-dashboard','planetary-strength','life-area'];
+const styles=['location-picker','birth-profiles','astrology-dashboard','dasha-dashboard','transit-intelligence','transit-calendar','transit-pro','transit-forecast','personal-intelligence','ai-report','full-report','pdf-studio','yoga-dashboard','planetary-strength','life-area','timeline'];
 styles.forEach(name=>{const link=document.createElement('link');link.rel='stylesheet';link.href=new URL(`../css/${name}.css`,import.meta.url);document.head.appendChild(link)});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=25', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js?v=26', { scope: './' }).catch(err => {
       console.warn('[Janma Kundali] service worker registration skipped:', err);
     });
   }, { once: true });
