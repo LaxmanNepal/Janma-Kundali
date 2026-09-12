@@ -1,47 +1,24 @@
-const CACHE = 'janma-kundali-v9';
+const CACHE = 'janma-kundali-v10';
 const OFFLINE_FALLBACK = './index.html';
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.add(OFFLINE_FALLBACK))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll([OFFLINE_FALLBACK])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
-
-  const isNavigation = event.request.mode === 'navigate' || event.request.destination === 'document';
-  const isCodeOrStyle = /\.(?:js|mjs|css|json|webmanifest)$/i.test(url.pathname);
-
-  // Always prefer the current deployment for navigation and application assets.
-  if (isCodeOrStyle || isNavigation) {
-    event.respondWith(
-      fetch(event.request, { cache: 'no-store' })
-        .then(response => {
-          if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
-          return response;
-        })
-        .catch(() => caches.match(event.request).then(cached => cached || (isNavigation ? caches.match(OFFLINE_FALLBACK) : Response.error())))
-    );
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== location.origin) return;
+  if (/\.(js|mjs|css|json|webmanifest)$/.test(url.pathname)) {
+    event.respondWith(fetch(request, {cache:'no-store'}).then(response => { if (response.ok) { const copy=response.clone(); caches.open(CACHE).then(cache=>cache.put(request,copy)); } return response; }).catch(() => caches.match(request)));
     return;
   }
-
-  event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-      if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
-      return response;
-    }))
-  );
+  if (request.mode === 'navigate') {
+    event.respondWith(fetch(request, {cache:'no-store'}).then(response => response).catch(() => caches.match(OFFLINE_FALLBACK)));
+  }
 });
