@@ -13,13 +13,14 @@ import './transit-pro-events.js';
 import './transit-forecast.js';
 import './personal-intelligence.js';
 import './ai-report-engine.js';
+import './full-report.js';
 
-const styles=['location-picker','birth-profiles','astrology-dashboard','dasha-dashboard','transit-intelligence','transit-calendar','transit-pro','transit-forecast','personal-intelligence','ai-report'];
+const styles=['location-picker','birth-profiles','astrology-dashboard','dasha-dashboard','transit-intelligence','transit-calendar','transit-pro','transit-forecast','personal-intelligence','ai-report','full-report'];
 styles.forEach(name=>{const link=document.createElement('link');link.rel='stylesheet';link.href=new URL(`../css/${name}.css`,import.meta.url);document.head.appendChild(link)});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js?v=21', { scope: './' }).catch(err => {
       console.warn('[Janma Kundali] service worker registration skipped:', err);
     });
   }, { once: true });
