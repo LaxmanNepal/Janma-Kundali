@@ -3,6 +3,7 @@ import './app-v2.js';
 import './runtime-enhancements.js';
 import './location-picker.js';
 import './birth-profiles.js';
+import './profile-result-sync.js';
 
 const locationStyle = document.createElement('link');
 locationStyle.rel = 'stylesheet';
