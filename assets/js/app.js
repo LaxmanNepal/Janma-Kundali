@@ -10,6 +10,7 @@ import './transit-intelligence.js';
 import './transit-calendar.js';
 import './transit-pro.js';
 import './transit-pro-events.js';
+import './transit-forecast.js';
 
 const locationStyle = document.createElement('link');
 locationStyle.rel = 'stylesheet';
@@ -45,6 +46,11 @@ const transitProStyle = document.createElement('link');
 transitProStyle.rel = 'stylesheet';
 transitProStyle.href = new URL('../css/transit-pro.css', import.meta.url);
 document.head.appendChild(transitProStyle);
+
+const transitForecastStyle = document.createElement('link');
+transitForecastStyle.rel = 'stylesheet';
+transitForecastStyle.href = new URL('../css/transit-forecast.css', import.meta.url);
+document.head.appendChild(transitForecastStyle);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
