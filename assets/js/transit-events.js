@@ -24,8 +24,7 @@ export async function detectTransitEvents(natal,{from=new Date(),days=365}={}){
   if(!natal)return [];
   const start=new Date(from); start.setHours(0,0,0,0);
   const key=`${start.getTime()}-${days}`;
-  let entry=cache.get(natal);
-  if(entry?.key===key)return entry.promise;
+  const entry=cache.get(natal); if(entry?.key===key)return entry.promise;
   const promise=(async()=>{
     const end=new Date(start.getTime()+days*STEP),events=[]; let previous=null;
     for(let t=start.getTime();t<=end.getTime();t+=STEP){
@@ -38,15 +37,14 @@ export async function detectTransitEvents(natal,{from=new Date(),days=365}={}){
           const exact=await refine(natal,name,t-STEP,t,type);
           const exactSnap=await calculateCurrentTransits(natal,{at:exact});
           const ep=exactSnap.planets.find(x=>x.name===name)||b;
-          events.push({id:`${name}-${type}-${exact.getTime()}`,planet:name,type,label:LABEL[type],priority:PRIORITY[name],at:exact.toISOString(),fromSign:a.signName,toSign:b.sign,sign:ep.sign,signName:ep.signName,house:ep.house,retrograde:ep.retrograde,theme:houseTheme(ep.house)});
+          events.push({id:`${name}-${type}-${exact.getTime()}`,planet:name,type,label:LABEL[type],priority:PRIORITY[name],at:exact.toISOString(),fromSign:a.signName,toSign:b.signName,sign:ep.sign,signName:ep.signName,house:ep.house,retrograde:ep.retrograde,theme:houseTheme(ep.house)});
         }
       }
       previous=current;
     }
     return events.sort((a,b)=>new Date(a.at)-new Date(b.at));
   })();
-  cache.set(natal,{key,promise});
-  return promise;
+  cache.set(natal,{key,promise}); return promise;
 }
 function houseTheme(h){return({1:'स्व-छवि/शरीर',2:'धन/परिवार',3:'साहस/सञ्चार',4:'घर/मन',5:'सिर्जना/शिक्षा',6:'काम/स्वास्थ्य',7:'सम्बन्ध/साझेदारी',8:'परिवर्तन/गोप्य विषय',9:'भाग्य/उच्च शिक्षा',10:'करियर/प्रतिष्ठा',11:'लाभ/नेटवर्क',12:'खर्च/विश्राम'})[h]||'जीवन क्षेत्र'}
 export const transitEventMeta={PLANETS,PRIORITY,LABEL};
