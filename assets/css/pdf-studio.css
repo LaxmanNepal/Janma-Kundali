@@ -1,0 +1,22 @@
+.pdf-studio{margin:18px 0;padding:18px;border:1px solid var(--line,#dfe5ee);border-radius:22px;background:var(--surface,#fff);box-shadow:0 12px 35px rgba(20,30,50,.07)}
+.pdf-studio-head{display:flex;justify-content:space-between;gap:18px;align-items:center}.pdf-studio-head small{font-weight:800;letter-spacing:.12em;opacity:.6}.pdf-studio-head h3{margin:3px 0;font-size:1.15rem}.pdf-studio-head p{margin:0;opacity:.65;font-size:.82rem}.pdf-studio-actions{display:flex;flex-wrap:wrap;gap:8px}.pdf-studio button{border:1px solid var(--line,#dfe5ee);background:transparent;border-radius:12px;padding:9px 12px;font:inherit;font-weight:700;cursor:pointer}.pdf-studio button:first-child{background:var(--text,#111);color:var(--surface,#fff)}.pdf-studio-meta{display:flex;justify-content:space-between;gap:12px;margin-top:13px;padding-top:12px;border-top:1px solid var(--line,#dfe5ee);font-size:.76rem;opacity:.68}.pdf-studio-meta b{letter-spacing:.08em}.fr-chart-page{break-before:page}.fr-chart-copy{display:flex;justify-content:center;align-items:center;min-height:210mm;padding:10px}.fr-chart-copy #chart,.fr-chart-copy svg{max-width:100%;width:min(100%,560px);height:auto}.fr-chart-copy .chart{width:100%}
+@media(max-width:760px){.pdf-studio-head{display:block}.pdf-studio-actions{margin-top:14px}.pdf-studio button{flex:1 1 45%}.pdf-studio-meta{display:block}.pdf-studio-meta span{display:block;margin-top:5px}}
+@media print{
+ @page{size:A4;margin:14mm 12mm 16mm}
+ body{background:#fff!important}
+ body>*:not(#app):not(script){ }
+ #pdfStudio,.site-header,.hero,.section:not(#result),#result>.result-header,#result>.summary-grid,#result>.accuracy-note,#astrologyDashboard,#transitIntelligence,#aiReportEngine,#personalIntelligence,.result-actions,.birth-profiles-panel{display:none!important}
+ #result{display:block!important;padding:0!important;margin:0!important}
+ #fullReport{display:block!important;margin:0!important;box-shadow:none!important}
+ .full-report{background:#fff!important;color:#111!important}
+ .fr-toolbar{display:none!important}
+ .fr-cover{break-after:page;min-height:245mm;display:flex;flex-direction:column;justify-content:center}
+ .fr-section{break-inside:avoid-page;margin:0 0 10mm!important;padding:0!important;box-shadow:none!important}
+ .fr-section header{break-after:avoid}
+ .fr-table-wrap{overflow:visible!important}
+ .fr-table-wrap table{width:100%!important}
+ .fr-chart-page{break-before:page;break-inside:auto!important;min-height:245mm}
+ .fr-chart-copy{min-height:210mm}
+ .fr-dasha-list>div,.fr-planet-grid article,.fr-area-grid article,.fr-house-grid .fr-house{break-inside:avoid}
+ .fr-disclaimer{break-before:page;margin-top:0!important}
+}
